@@ -1,13 +1,15 @@
 clear variables;
 a = 3.32987;
-scal = 2;
-xOrigin = 1;
-yOrigin = 1;
+c = 0;
+scal = 3;
+xOrigin = 3;
+yOrigin = 0;
 zOrigin = 0;
 
 a1 = [a 0 0];
 a2 = [-a/2 sqrt(3)*a/2 0];
-groupPosition = [xOrigin - a/4; yOrigin - sqrt(3)*a/4; zOrigin + 0];
+a3 = [0 0 c];
+groupPosition = [xOrigin - 1/2; yOrigin - 1/2; zOrigin + 0];
 % Build the symmetry
 SymmetryOperation = cell(1, 24);
 SymmetryOperation{1} = [ 1  0  0;  0  1  0;  0  0  1];
@@ -38,9 +40,13 @@ fig = figure();
 hold on;
 % Calculate the position
 equiv = cell(1, length(SymmetryOperation));
+directEquiv = cell(1, length(SymmetryOperation));
+catesianEquiv = cell(1, length(SymmetryOperation));
 for numIdx = 1: length(SymmetryOperation)
     equiv{numIdx} = SymmetryOperation{numIdx} * groupPosition;
-    scatter(equiv{numIdx}(1) + a/4, equiv{numIdx}(2) + sqrt(3)*a/4);
+    directEquiv{numIdx} = [equiv{numIdx}(1) + 1/2; equiv{numIdx}(2) + 1/2; equiv{numIdx}(3)];
+    catesianEquiv{numIdx} = directEquiv{numIdx}(1) * a1 + directEquiv{numIdx}(2) * a2 + directEquiv{numIdx}(3) * a3;
+    scatter(catesianEquiv{numIdx}(1), catesianEquiv{numIdx}(2));
 end
 latticePos = cell(1, 4);
 latticePos{1} = [0 0 0];

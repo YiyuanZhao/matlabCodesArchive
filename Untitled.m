@@ -1,6 +1,8 @@
 clear variables
 %% Data Preprocessing
 hoppingInfo = load('D:\OneDrive - tongji.edu.cn\vscode_workspace\DESKTOP-DQVLUVG\VScode_WorkSpace\model\data\grapProcessed.dat');
+degeneracy = load('degeneracy.mat');
+hoppingInfo(:, 8) = degeneracy.degeneracy';
 hoppingParameter = hoppingInfo(:, 6);
 a1 = [3.3291   -0.0000    0.0000];
 a2 = [-1.6645    2.8831   -0.0000];

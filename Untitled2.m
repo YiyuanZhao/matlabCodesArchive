@@ -1,20 +1,13 @@
-orbit = 3;
-c = getWeight(2, 7, PROCAR.totkpoints,orbit,PROCAR);
-
-function weight = getWeight (atomNumber, nbands, totkpoints, orbitIndex, PROCAR)
-% orbitIndex:
-%     2:  s
-%     3:  py
-%     4:  pz
-%     5:  px
-%     6:  dxy
-%     7:  dyz
-%     8:  dz^2
-%     9:  dxz
-%     10: dx2_y2
-%     11: tot
-    weight = zeros (totkpoints, 1);
-    for numIdx = 1: totkpoints
-        weight(numIdx) = PROCAR.processed{nbands, numIdx}.weight{atomNumber, orbitIndex};        
-    end  
+for i = 2: 11
+    hoppingMatrixTemp{i} = hoppingMatrixOrigin{i};
+    len = length(hoppingMatrixTemp{i}(:, 1));
+    hoppingOrder = i - 1;
+    hoppingMatrixTemp{i} = [hoppingOrder * ones(len, 1), hoppingMatrixTemp{i}, zeros(len, 1), ones(len, 2)];
+    if i == 2
+        out = hoppingMatrixTemp{i};
+    else
+        out = [out ;hoppingMatrixTemp{i}];
+    end
+%     writecell({[hoppingOrder, len]}, 'hoppingPara.txt', 'WriteMode', 'append', 'Delimiter', 'tab');
+%     writemcell(hoppingMatrixTemp(i), 'hoppingPara.txt', 'WriteMode', 'append', 'Delimiter', 'tab');
 end

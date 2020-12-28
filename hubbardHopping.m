@@ -54,8 +54,8 @@ Hkin = zeros(1, length(kPointsMesh));
 for loopIndex = 1:length(kPointsMesh)
     Hkin(loopIndex) = calculateKineticHamiltonian(transMatA, kPointsMesh(1:3, loopIndex)', hoppingParameter, hoppingMatrix);
 end
-%  scatter3(kPointsMesh(1, :), kPointsMesh(2, :), Hkin, 1);
-% scatter(kPointsMesh(4, :), Hkin, 1);
+ scatter3(kPointsMesh(1, :), kPointsMesh(2, :), Hkin, 1);
+%  scatter(kPointsMesh(4, :), Hkin, 1);
 
 %% External Function
 function Hkin = calculateKineticHamiltonian(transMat, kpointsRecip, hoppingParameter, hoppingMatrixProcessed)

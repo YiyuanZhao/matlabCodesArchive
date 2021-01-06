@@ -11,3 +11,13 @@ for i = 2: 11
 %     writecell({[hoppingOrder, len]}, 'hoppingPara.txt', 'WriteMode', 'append', 'Delimiter', 'tab');
 %     writemcell(hoppingMatrixTemp(i), 'hoppingPara.txt', 'WriteMode', 'append', 'Delimiter', 'tab');
 end
+
+load('D:\OneDrive - tongji.edu.cn\vscode_workspace\DESKTOP-DQVLUVG\VScode_WorkSpace\model\data\spectrum_orig.dat');
+figure;
+plot(spectrum_orig(:, 1)*kPointsMesh(4, end)/spectrum_orig(end, 1), spectrum_orig(:, 2))
+load('D:\OneDrive - tongji.edu.cn\vscode_workspace\DESKTOP-DQVLUVG\VScode_WorkSpace\model\data\wanner90_band.dat');
+hold on
+plot(wanner90_band(:, 1), wanner90_band(:, 2))
+hold off
+kPointsMesh(2, 2)
+legend

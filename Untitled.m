@@ -1,8 +1,15 @@
 clear variables
 %% Data Preprocessing
-hoppingInfo = load('D:\OneDrive - tongji.edu.cn\vscode_workspace\DESKTOP-DQVLUVG\VScode_WorkSpace\model\data\grapProcessed.dat');
-degeneracy = load('degeneracy.mat');
-hoppingInfo(:, 8) = degeneracy.degeneracy';
+% hoppingInfo = load('D:\OneDrive - tongji.edu.cn\vscode_workspace\DESKTOP-DQVLUVG\VScode_WorkSpace\model\data\grapProcessed.dat');
+% degeneracy = load('degeneracy.mat');
+hoppingInfo = load('C:\Users\SCES\AppData\Roaming\MathWorks\MATLAB Add-Ons\Apps\VASP_Plotter - 1\hoppingParameterProcessed.dat');
+degeneracy = load('C:\Users\SCES\AppData\Roaming\MathWorks\MATLAB Add-Ons\Apps\VASP_Plotter - 1\degeneracy.dat');
+hoppingInfo(:, 8) = degeneracy';
+
+% Danger zone degeneracy correction
+hoppingInfo(:, 6) = hoppingInfo(:, 6) ./ hoppingInfo(:, 8);
+% Danger zone ended
+
 hoppingParameter = hoppingInfo(:, 6);
 a1 = [3.3298712493556994    0.0000000000000000    0.0000000000000000];
 a2 = [-1.6649356246778497    2.8837530932734619   -0.0000000000000000];
@@ -63,7 +70,21 @@ for loopIndex = 1:length(kPointsMesh)
     Hkin(loopIndex) = calculateKineticHamiltonian(transMatA, kPointsMesh(1:3, loopIndex)', hoppingParameterOrderLoop, hoppingMatrixOrderLoop);
 end
 %  scatter3(kPointsMesh(1, :), kPointsMesh(2, :), Hkin, 1);
-% scatter(kPointsMesh(1, :), kPointsMesh(2, :), Hkin, 1);
+scatter(kPointsMesh(4, :), Hkin, 1);
+
+%% Compare the calculation result to the wannier fitting
+load('D:\OneDrive - tongji.edu.cn\vscode_workspace\DESKTOP-DQVLUVG\VScode_WorkSpace\model\data\wanner90_band.dat');
+hold on;
+plot(wanner90_band(:, 1), wanner90_band(:, 2));
+hold off;
+atomPosition = hoppingInfoSorted(:, 1).* a1 + hoppingInfoSorted(:, 2).* a2 + hoppingInfoSorted(:, 3).* a3;
+generacyOne = hoppingInfoSorted(:, 8) == 1;
+generacyTwo = hoppingInfoSorted(:, 8) == 2;
+fig = figure();
+scatter(atomPosition(generacyOne, 1), atomPosition(generacyOne, 2), 'filled', 'r');
+hold on
+scatter(atomPosition(generacyTwo, 1), atomPosition(generacyTwo, 2), 'filled', 'b');
+xlim([-40 40]);
 %% H_{kin} = exp{i \vec{k} \cdot \vec{r}}
 function Hkin = calculateKineticHamiltonian(transMat, kpointsRecip, hoppingParameter, hoppingMatrixProcessed)
 Hkin = 0;

@@ -1,4 +1,4 @@
-clear variables;
+% clear variables;
 a = 3.441;  % a-axies of the lattice
 b = a;      % b-axies of the lattice
 gamma = 120;% angle of <a, b>
@@ -56,6 +56,38 @@ for i = 1: 22 %length(output.neighbour)
     %saveas(fig, ['C:\Users\SCES\Desktop\temp\img\', num2str(i),'.png']);
 end
 
+%% Temporary Codes
+opts = delimitedTextImportOptions("NumVariables", 61);
+opts.DataLines = [1, Inf];
+opts.Delimiter = " ";
+opts.VariableNames = ["written", "on", "Dec2020", "at", "VarName5", "VarName6", "VarName7", "VarName8", "VarName9", "VarName10", "VarName11", "VarName12", "VarName13", "VarName14", "VarName15", "Var16", "Var17", "Var18", "Var19", "Var20", "Var21", "Var22", "Var23", "Var24", "Var25", "Var26", "Var27", "Var28", "Var29", "Var30", "Var31", "Var32", "Var33", "Var34", "Var35", "Var36", "Var37", "Var38", "Var39", "Var40", "Var41", "Var42", "Var43", "Var44", "Var45", "Var46", "Var47", "Var48", "Var49", "Var50", "Var51", "Var52", "Var53", "Var54", "Var55", "Var56", "Var57", "Var58", "Var59", "Var60", "Var61"];
+opts.SelectedVariableNames = ["written", "on", "Dec2020", "at", "VarName5", "VarName6", "VarName7", "VarName8", "VarName9", "VarName10", "VarName11", "VarName12", "VarName13", "VarName14", "VarName15"];
+opts.VariableTypes = ["double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "double", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "string"];
+opts = setvaropts(opts, [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61], "WhitespaceRule", "preserve");
+opts = setvaropts(opts, [1, 2], "TrimNonNumeric", true);
+opts = setvaropts(opts, [1, 2], "ThousandsSeparator", ",");
+opts = setvaropts(opts, [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61], "EmptyFieldRule", "auto");
+opts.ExtraColumnsRule = "ignore";
+opts.EmptyLineRule = "read";
+opts.ConsecutiveDelimitersRule = "join";
+opts.LeadingDelimitersRule = "ignore";
+grap = readtable("D:\OneDrive - tongji.edu.cn\vscode_workspace\DESKTOP-DQVLUVG\VScode_WorkSpace\model\data\grap.dat", opts);
+tmp.grap = table2array(grap);
+clear opts
+% Preprocess of wanner_hr.dat, gaining degeneracy and hopping matrix
+tmp.hoppingNumber = tmp.grap(3, 1);
+tmp.residue = mod(tmp.hoppingNumber, 15);
+tmp.loopMaxIndex = floor(tmp.hoppingNumber./15);
+tmp.degeneracy = [reshape(tmp.grap(4: 3 + tmp.loopMaxIndex, :)', 1, []), tmp.grap(4 + tmp.loopMaxIndex, 1: tmp.residue)];
+tmp.hopping = tmp.grap(tmp.loopMaxIndex + 5: end, 1: 7);
+fileID = fopen('degeneracy.dat', 'w');
+fprintf(fileID, "%5i", tmp.degeneracy);
+fclose(fileID);
+fileID = fopen('hoppingParameterProcessed.dat', 'w');
+for numIdx = 1: length(tmp.hopping(:, 1))
+    fprintf(fileID, "%5i %5i %5i %5i %5i %12.6f %12.6f\n", tmp.hopping(numIdx, :));
+end
+fclose(fileID);
 %% External Functions
 function [neighbour, neighbourDistance, distanceTemp] = judgeNeighbour(lattice, ~, distanceTemp, i, degeneracy, resolution)
 minValue = min(min(distanceTemp));

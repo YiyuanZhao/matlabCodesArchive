@@ -1,4 +1,4 @@
-% clear variables;
+clear variables;
 a = 3.441;  % a-axies of the lattice
 b = a;      % b-axies of the lattice
 gamma = 120;% angle of <a, b>
@@ -72,6 +72,7 @@ opts.EmptyLineRule = "read";
 opts.ConsecutiveDelimitersRule = "join";
 opts.LeadingDelimitersRule = "ignore";
 grap = readtable("D:\OneDrive - tongji.edu.cn\vscode_workspace\DESKTOP-DQVLUVG\VScode_WorkSpace\model\data\grap.dat", opts);
+% grap = readtable("D:\OneDrive - tongji.edu.cn\vscode_workspace\DESKTOP-DQVLUVG\VScode_WorkSpace\model\data\lessKpointsWannier90_hr.dat", opts);
 tmp.grap = table2array(grap);
 clear opts
 % Preprocess of wanner_hr.dat, gaining degeneracy and hopping matrix

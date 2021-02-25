@@ -2,7 +2,7 @@ clear variables;
 nMax = 20;
 mMax = 20;
 a = 1;
-cutMaxA = 10* a;
+cutMaxA = 5* a;
 
 theta1 = zeros(nMax, mMax);
 theta2 = zeros(nMax, mMax);
@@ -38,7 +38,30 @@ sortedMixType = nan(size(thetaMix));
 sortedMixType = 2*(sortedIndexMix(:) > (numel(thetaMix)/2)) + 1*(sortedIndexMix(:) <= (numel(thetaMix)/2));
 scatter(sortedThetaMix, lengthMix(sortedIndexMix), 5);
 
-[thetaMixUnique, sortedIndexMixUnique] = uniquetol(thetaMix, 'ByRows', true);
-lengthMixUnique = lengthMix(sortedIndexMixUnique);
+[thetaMixUnique, sortedIndexMixUnique] = uniquetol(thetaMix);
+lengthMixUnique = nan(size(thetaMixUnique));
+sortedmMixUnique = nan(size(thetaMixUnique));
+sortednMixUnique = nan(size(thetaMixUnique));
+sortedMixTypeUnique = nan(size(thetaMixUnique));
+for numIdx = 1: length(thetaMixUnique)
+    searchIndex = abs(thetaMixUnique(numIdx) -  sortedThetaMix) < 1e-8;
+    lengthMixUnique(numIdx) = min(lengthMix(sortedIndexMix(searchIndex)));
+    tmpIndex = searchIndex & abs(lengthMix(sortedIndexMix) - lengthMixUnique(numIdx))< 1e-8;
+    sortedmMixUnique(numIdx) = sortedmMix(tmpIndex);
+    sortednMixUnique(numIdx) = sortednMix(tmpIndex);
+    sortedMixTypeUnique(numIdx) = sortedMixType(tmpIndex);
+end
+
 figure;
 scatter(thetaMixUnique, lengthMixUnique, 5);
+% plot(thetaMixUnique, lengthMixUnique);
+
+cutIndex = lengthMixUnique < cutMaxA;
+thetaMixUniqueCut = thetaMixUnique(cutIndex);
+lengthMixUniqueCut = lengthMixUnique(cutIndex);
+sortedmMixUniqueCut = sortedmMixUnique(cutIndex);
+sortednMixUniqueCut = sortednMixUnique(cutIndex);
+sortedMixTypeUniqueCut = sortedMixTypeUnique(cutIndex);
+
+figure;
+scatter(thetaMixUniqueCut, lengthMixUniqueCut, 5);

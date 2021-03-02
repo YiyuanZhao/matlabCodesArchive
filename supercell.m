@@ -2,7 +2,7 @@
 clear variables;
 nMax = 40;
 mMax = 40;
-a = 1;
+a = 3.441;
 cutMaxA = 10* a;
 
 theta1 = zeros(nMax, mMax);
@@ -26,6 +26,7 @@ for numIdxN = 1: nMax
 end
 length3 = length1;
 length4 = length2;
+
 % [sortedTheta1, sortedIndex1] = sort(theta1(:));
 % [sortedn1, sortedm1] = ind2sub(size(theta1), sortedIndex1);
 % [sortedTheta2, sortedIndex2] = sort(theta2(:));
@@ -84,7 +85,7 @@ clear cutMaxA mMax nMax numIdx numIdxM numIdxN tmpIndex cutIndex
 clear lengthMixUnique searchIndex sortedmMix sortedMixType sortedMixTypeUnique sortedIndexMix sortedmMix sortedmMixUnique
 clear sortedIndexMixUnique sortednMix sortednMixUnique sortedThetaMix thetaMixUnique
 %% Generates the lattice
-a = 1;  % a-axies of the lattice
+a = 3.441;  % a-axies of the lattice
 b = a;      % b-axies of the lattice
 gamma = 120;% angle of <a, b>
 sizeLattice = 21;  % Scale of the system (should be odd)
@@ -117,15 +118,18 @@ lattice.y = lattice.y - lattice.y(centerOrder, centerOrder);
 
 %% Rotation
 % Construct layers
-d = 0.05;
-D = 0.5;
-% rotationNumIdx = 20;
-for rotationNumIdx = 19: 19
+d = 1.6628674201302;
+D = 3.00666428509691;
+vacuumLength = 20;
+numberOfLayers = 2;
+rotationNumIdx = 39;
+% for rotationNumIdx = 13: 13
 rotationDegree = thetaMixUniqueCut(rotationNumIdx)/2;
 supercellLattice = lengthMixUniqueCut(rotationNumIdx);
 supercellBoundx = [0, supercellLattice, supercellLattice/2, -supercellLattice/2, 0];
 supercellBoundy = [0, 0, sqrt(3)/2 * supercellLattice, sqrt(3)/2 * supercellLattice, 0];
 offsetSe1 = [deltaA', deltaB']*[2/3; 1/3];
+% offsetSe1 = [deltaA', deltaB']*[1/3; 2/3];
 offsetSe2 = [deltaA', deltaB']*[1/3; 2/3];
 layer{1}.Se1.x = lattice.x + offsetSe1(1);
 layer{1}.Se1.y = lattice.y + offsetSe1(2);
@@ -138,12 +142,12 @@ layer{1}.Se2.y = lattice.y + offsetSe2(2);
 layer{1}.Se2.z = zeros(size(lattice.x)) + 2*d;
 
 layer{2} = layer{1};
-layer{2}.Se1.z = layer{1}.Se1.z + D;
-layer{2}.Se2.z = layer{1}.Se2.z + D;
-layer{2}.V.z = layer{1}.V.z + D;
+layer{2}.Se1.z = layer{1}.Se1.z + D + 2*d;
+layer{2}.Se2.z = layer{1}.Se2.z + D + 2*d;
+layer{2}.V.z = layer{1}.V.z + D + 2*d;
 
 % Rotation Process
-for i = 1: 2
+for i = 1: numberOfLayers
     % layer0: counterclock; layer1: clock
     switch i
         case 1
@@ -180,6 +184,8 @@ for i = 1: 2
     end
     % Cut the supercell
     layer{i}.V.inSupercell = inpolygon(layer{i}.V.x, layer{i}.V.y, supercellBoundx, supercellBoundy);
+    layer{i}.Se1.inSupercell = inpolygon(layer{i}.Se1.x, layer{i}.Se1.y, supercellBoundx, supercellBoundy);
+    layer{i}.Se2.inSupercell = inpolygon(layer{i}.Se2.x, layer{i}.Se2.y, supercellBoundx, supercellBoundy);
 end
 
 % 
@@ -199,14 +205,54 @@ end
 fig = figure;
 hold on;
 % scatter3(layer{1}.Se1.x(:), layer{1}.Se1.y(:), layer{1}.Se1.z(:), 'green');
-scatter3(layer{1}.V.x(layer{i}.V.inSupercell), layer{1}.V.y(layer{i}.V.inSupercell), layer{1}.V.z(layer{i}.V.inSupercell), 'red');
+scatter3(layer{1}.V.x(layer{1}.V.inSupercell), layer{1}.V.y(layer{1}.V.inSupercell), layer{1}.V.z(layer{1}.V.inSupercell), 'red');
 % scatter3(layer{1}.Se2.x(:), layer{1}.Se2.y(:), layer{1}.Se2.z(:), 'green');
 % scatter3(layer{2}.Se1.x(:), layer{2}.Se1.y(:), layer{2}.Se1.z(:), 'green');
-scatter3(layer{2}.V.x(layer{i}.V.inSupercell), layer{2}.V.y(layer{i}.V.inSupercell), layer{2}.V.z(layer{i}.V.inSupercell), 'blue');
+scatter3(layer{2}.V.x(layer{2}.V.inSupercell), layer{2}.V.y(layer{2}.V.inSupercell), layer{2}.V.z(layer{2}.V.inSupercell), 'blue');
 % scatter3(layer{2}.Se2.x(:), layer{2}.Se2.y(:), layer{2}.Se2.z(:), 'green');
 hold off
 maxLim = max(abs([fig.Children.XLim, fig.Children.YLim]));
 fig.Children.XLim = [-maxLim, maxLim];
 fig.Children.YLim = [-maxLim, maxLim];
 
+% Calculate POSCAR
+supercellC = vacuumLength + 4*d + D;
+VatomNumber = 0;
+SeatomNumber = 0;
+superCell.V.x = layer{1}.V.x(layer{1}.V.inSupercell);
+superCell.V.y = layer{1}.V.y(layer{1}.V.inSupercell);
+superCell.V.z = layer{1}.V.z(layer{1}.V.inSupercell);
+superCell.Se.x = cat(1, layer{1}.Se1.x(layer{1}.Se1.inSupercell), layer{1}.Se2.x(layer{1}.Se2.inSupercell));
+superCell.Se.y = cat(1, layer{1}.Se1.y(layer{1}.Se1.inSupercell), layer{1}.Se2.y(layer{1}.Se2.inSupercell));
+superCell.Se.z = cat(1, layer{1}.Se1.z(layer{1}.Se1.inSupercell), layer{1}.Se2.z(layer{1}.Se2.inSupercell));
+for i = 1: numberOfLayers
+    VatomNumber = VatomNumber + length(layer{i}.V.x(layer{i}.V.inSupercell));
+    SeatomNumber = SeatomNumber + length(layer{i}.Se1.x(layer{i}.Se1.inSupercell)) + length(layer{i}.Se2.x(layer{i}.Se2.inSupercell));
+    if i >= 2
+        superCell.V.x = cat(1, superCell.V.x, layer{i}.V.x(layer{i}.V.inSupercell));
+        superCell.V.y = cat(1, superCell.V.y, layer{i}.V.y(layer{i}.V.inSupercell));
+        superCell.V.z = cat(1, superCell.V.z, layer{i}.V.z(layer{i}.V.inSupercell));
+        superCell.Se.x = cat(1, superCell.Se.x, layer{i}.Se1.x(layer{i}.Se1.inSupercell), layer{i}.Se2.x(layer{i}.Se2.inSupercell));
+        superCell.Se.y = cat(1, superCell.Se.y, layer{i}.Se1.y(layer{i}.Se1.inSupercell), layer{i}.Se2.y(layer{i}.Se2.inSupercell));
+        superCell.Se.z = cat(1, superCell.Se.z, layer{i}.Se1.z(layer{i}.Se1.inSupercell), layer{i}.Se2.z(layer{i}.Se2.inSupercell));
+    end
 end
+% Write POSCAR
+fileId = fopen("POSCAR", 'w');
+fprintf(fileId, "Degree: %.5f\n", thetaMixUniqueCut(rotationNumIdx));
+fprintf(fileId, "   1.00000000000000 \n");
+fprintf(fileId, "%24.15f %24.15f %24.15f\n", [supercellLattice, 0, 0]);
+fprintf(fileId, "%24.15f %24.15f %24.15f\n", [-supercellLattice/2, sqrt(3)/2*supercellLattice, 0]);
+fprintf(fileId, "%24.15f %24.15f %24.15f\n", [0, 0, supercellC]);
+fprintf(fileId, "   V    Se\n");
+fprintf(fileId, "%6d %6d\n", [VatomNumber, SeatomNumber]);
+fprintf(fileId, "Cartesian\n");
+for numIdx = 1: VatomNumber
+    fprintf(fileId, "% 18.16f % 21.16f % 21.16f\n", [superCell.V.x(numIdx), superCell.V.y(numIdx), superCell.V.z(numIdx)]);
+end
+
+for numIdx = 1: SeatomNumber
+    fprintf(fileId, "% 18.16f % 21.16f % 21.16f\n", [superCell.Se.x(numIdx), superCell.Se.y(numIdx), superCell.Se.z(numIdx)]);
+end
+fclose(fileId);
+% end

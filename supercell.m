@@ -2,7 +2,7 @@
 clear variables;
 nMax = 40;
 mMax = 40;
-a = 3.441;
+a = 3.3171310374808005;
 cutMaxA = 10* a;
 
 theta1 = zeros(nMax, mMax);
@@ -27,11 +27,11 @@ end
 length3 = length1;
 length4 = length2;
 
-% [sortedTheta1, sortedIndex1] = sort(theta1(:));
-% [sortedn1, sortedm1] = ind2sub(size(theta1), sortedIndex1);
-% [sortedTheta2, sortedIndex2] = sort(theta2(:));
-% [sortedn2, sortedm2] = ind2sub(size(theta2), sortedIndex2);
-% 
+[sortedTheta1, sortedIndex1] = sort(theta1(:));
+[sortedn1, sortedm1] = ind2sub(size(theta1), sortedIndex1);
+[sortedTheta2, sortedIndex2] = sort(theta2(:));
+[sortedn2, sortedm2] = ind2sub(size(theta2), sortedIndex2);
+
 % figure();
 % hold on;
 % scatter(sortedTheta1, length1(sortedIndex1), 5, 'b');
@@ -48,6 +48,8 @@ end
 sortedMixType = nan(size(thetaMix));
 sortedMixType = 1*(sortedIndexMix(:) <= (numel(thetaMix)/4)) + 2*(sortedIndexMix(:) > (numel(thetaMix)/4) & sortedIndexMix(:) <= (numel(thetaMix)/2)) ...
     + 3* (sortedIndexMix(:) > (numel(thetaMix)/2) & sortedIndexMix(:) <= (numel(thetaMix)*3/4)) + 4*(sortedIndexMix(:) > (numel(thetaMix)*3/4));
+
+% figure;
 % scatter(sortedThetaMix, lengthMix(sortedIndexMix), 5);
 
 [thetaMixUnique, sortedIndexMixUnique] = uniquetol(thetaMix);
@@ -85,10 +87,10 @@ clear cutMaxA mMax nMax numIdx numIdxM numIdxN tmpIndex cutIndex
 clear lengthMixUnique searchIndex sortedmMix sortedMixType sortedMixTypeUnique sortedIndexMix sortedmMix sortedmMixUnique
 clear sortedIndexMixUnique sortednMix sortednMixUnique sortedThetaMix thetaMixUnique
 %% Generates the lattice
-a = 3.441;  % a-axies of the lattice
+% a = 3.441;  % a-axies of the lattice
 b = a;      % b-axies of the lattice
 gamma = 120;% angle of <a, b>
-sizeLattice = 21;  % Scale of the system (should be odd)
+sizeLattice = 31;  % Scale of the system (should be odd)
 
 % Initialize of the variables
 centerOrder = (sizeLattice + 1) ./ 2;
@@ -118,11 +120,11 @@ lattice.y = lattice.y - lattice.y(centerOrder, centerOrder);
 
 %% Rotation
 % Construct layers
-d = 1.6628674201302;
-D = 3.00666428509691;
+d = 1.58106107700766;   % h-phase:1.59498653898723, t-phase:1.58106107700766
+D = 3.12122839340594;   % h-phase:3.67176692979057, t-phase:3.12122839340594
 vacuumLength = 20;
 numberOfLayers = 2;
-rotationNumIdx = 39;
+rotationNumIdx = 13;
 % for rotationNumIdx = 13: 13
 rotationDegree = thetaMixUniqueCut(rotationNumIdx)/2;
 supercellLattice = lengthMixUniqueCut(rotationNumIdx);

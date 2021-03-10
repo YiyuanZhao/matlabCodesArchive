@@ -63,3 +63,36 @@ weight(pathSelectionMix) = 2;
 %     weight = weight + weightloop;
 % end
 scatter3(kPointsMesh(1, :), kPointsMesh(2, :), weight, 2);
+
+%% Calculate methods (energy Level)
+maxWeight = 2;
+lifeWidth = 0.70316;
+weight = calculateWeightProportialToEnergy(maxWeight, lifeWidth, targetHkin, 0);
+figure;
+plot(kPointsMesh(4, :), weight);
+%%
+a.a1 = 1;
+a.a2 = 2;
+a.a3 = 3;
+out = geta(a);
+%%
+function weight = calculateWeightProportialToEnergy(maxWeight, lifeWidth, targetHkin, FermiLevel)
+% Gauss distribution, peaks at Fermilevel with input variable maxWeight,
+% and decays to unity at lifeWidth.
+% Distribution Density: $$ y = \frac{1}{\sqrt{2\pi}\sigma} exp{[-\frac{(E_{tar} - E_f)^2}{k \cdot 2\sigma^2}]}$$
+% where k is a renormalization parameter which satisfies $$ k = \frac{\pi L^2 N^2}{ln N}$$, others are standard gauss
+% distribution probablility density function(pdf).
+sigma = 1/(maxWeight * sqrt(2*pi()));
+k = pi()*lifeWidth^2*maxWeight^2/log(maxWeight);
+weight = zeros(1, length(targetHkin));
+for numIdx = 1: length(targetHkin)
+    weight(numIdx) = 1/(sqrt(2*pi())*sigma)*exp(-(targetHkin(numIdx)-FermiLevel)^2/(k*2*sigma^2));
+    if weight(numIdx) < 1
+        weight(numIdx) = 1;
+    end
+end
+end
+
+function out = geta(a)
+out = a.a1;
+end

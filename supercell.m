@@ -90,7 +90,7 @@ clear sortedIndexMixUnique sortednMix sortednMixUnique sortedThetaMix thetaMixUn
 % a = 3.441;  % a-axies of the lattice
 b = a;      % b-axies of the lattice
 gamma = 120;% angle of <a, b>
-sizeLattice = 31;  % Scale of the system (should be odd)
+sizeLattice = 21;  % Scale of the system (should be odd)
 
 % Initialize of the variables
 centerOrder = (sizeLattice + 1) ./ 2;
@@ -124,14 +124,14 @@ d = 1.58106107700766;   % h-phase:1.59498653898723, t-phase:1.58106107700766
 D = 3.12122839340594;   % h-phase:3.67176692979057, t-phase:3.12122839340594
 vacuumLength = 20;
 numberOfLayers = 2;
-rotationNumIdx = 13;
+rotationNumIdx = 16;
 % for rotationNumIdx = 13: 13
 rotationDegree = thetaMixUniqueCut(rotationNumIdx)/2;
 supercellLattice = lengthMixUniqueCut(rotationNumIdx);
 supercellBoundx = [0, supercellLattice, supercellLattice/2, -supercellLattice/2, 0];
 supercellBoundy = [0, 0, sqrt(3)/2 * supercellLattice, sqrt(3)/2 * supercellLattice, 0];
-offsetSe1 = [deltaA', deltaB']*[2/3; 1/3];
-% offsetSe1 = [deltaA', deltaB']*[1/3; 2/3];
+% offsetSe1 = [deltaA', deltaB']*[2/3; 1/3];
+offsetSe1 = [deltaA', deltaB']*[1/3; 2/3];
 offsetSe2 = [deltaA', deltaB']*[1/3; 2/3];
 layer{1}.Se1.x = lattice.x + offsetSe1(1);
 layer{1}.Se1.y = lattice.y + offsetSe1(2);

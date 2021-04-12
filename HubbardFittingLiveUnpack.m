@@ -1,13 +1,15 @@
 clear variables
 workingMode = 2;                % 1: K-mesh at xy plane;  2: K-path at high-symmetry path
 fermiLevel = -2.4474445;        % Should be defined in K-path Working Mode
-fittingNeighbourOrder = 10;     % Fitting Order
+fittingNeighbourOrder = 20;     % Fitting Order
 fittingTypeDatabase = {'WannierFit', 'DFT'};     % options: 'DFT' / 'WannierFit'
-calcDiffMethod = 4;
+calcDiffMethod = 5;
 repeatTimes = 1;
-optWeightOptions.optWeightMode = 1;
+continueOptFlag = 0;
+optWeightOptions.optWeightMode = 0;
 optWeightOptions.maxWeight = 2;
 optWeightOptions.unityWidth = 1;
+% rng(5);
 
 fittingNeighbourOrderMin = 5;
 fittingNeighbourOrderStep = 1;
@@ -67,7 +69,10 @@ initialHoppingParameterDataBase = [-2.430432, -0.040101, 0.097522, -0.070591, 0.
 % if nargin == 5
 %     initialHoppingParameter = initialHoppingParameterDataBase(1: fittingNeighbourOrder);
 % end
-
+if continueOptFlag == 1
+    load('updatedHoppingParameter.mat');
+    initialHoppingParameter = cell2mat(updatedHoppingParameter);
+end
 %% Initialize fitting function (DO NOT EDIT THIS SECTION)
 % Lattice Construction
 a1 = [3.3291   -0.0000    0.0000];
@@ -94,6 +99,16 @@ hoppingMatrix{17}=[-7,-3,0;-7,-4,0;-4,3,0;-4,-7,0;-3,4,0;-3,-7,0;3,7,0;3,-4,0;4,
 hoppingMatrix{18}=[-7,-2,0;-7,-5,0;-5,2,0;-5,-7,0;-2,5,0;-2,-7,0;2,7,0;2,-5,0;5,7,0;5,-2,0;7,5,0;7,2,0];
 hoppingMatrix{19}=[-7,-1,0;-7,-6,0;-6,1,0;-6,-7,0;-1,6,0;-1,-7,0;1,7,0;1,-6,0;6,7,0;6,-1,0;7,6,0;7,1,0];
 hoppingMatrix{20}=[-8,-4,0;-4,4,0;-4,-8,0;4,8,0;4,-4,0;8,4,0];
+hoppingMatrix{21}=[-7,0,0;-7,-7,0;0,7,0;0,-7,0;7,7,0;7,0,0];
+hoppingMatrix{22}=[-8,-3,0;-8,-5,0;-5,3,0;-5,-8,0;-3,5,0;-3,-8,0;3,8,0;3,-5,0;5,8,0;5,-3,0;8,5,0;8,3,0];
+hoppingMatrix{23}=[-8,-2,0;-8,-6,0;-6,2,0;-6,-8,0;-2,6,0;-2,-8,0;2,8,0;2,-6,0;6,8,0;6,-2,0;8,6,0;8,2,0];
+hoppingMatrix{24}=[-8,-1,0;-8,-7,0;-7,1,0;-7,-8,0;-1,7,0;-1,-8,0;1,8,0;1,-7,0;7,8,0;7,-1,0;8,7,0;8,1,0];
+hoppingMatrix{25}=[-9,-4,0;-9,-5,0;-5,4,0;-5,-9,0;-4,5,0;-4,-9,0;4,9,0;4,-5,0;5,9,0;5,-4,0;9,5,0;9,4,0];
+hoppingMatrix{26}=[-9,-3,0;-9,-6,0;-6,3,0;-6,-9,0;-3,6,0;-3,-9,0;3,9,0;3,-6,0;6,9,0;6,-3,0;9,6,0;9,3,0];
+hoppingMatrix{27}=[-8,0,0;-8,-8,0;0,8,0;0,-8,0;8,8,0;8,0,0];
+hoppingMatrix{28}=[-9,-2,0;-9,-7,0;-7,2,0;-7,-9,0;-2,7,0;-2,-9,0;2,9,0;2,-7,0;7,9,0;7,-2,0;9,7,0;9,2,0];
+hoppingMatrix{29}=[-9,-1,0;-9,-8,0;-8,1,0;-8,-9,0;-1,8,0;-1,-9,0;1,9,0;1,-8,0;8,9,0;8,-1,0;9,8,0;9,1,0];
+hoppingMatrix{30}=[-10,-5,0;-5,5,0;-5,-10,0;5,10,0;5,-5,0;10,5,0];
 hoppingParameter{1} = -2.430432;
 hoppingParameter{2} = -0.0401010000000000;
 hoppingParameter{3} = 0.0975220000000000;
@@ -176,7 +191,7 @@ switch workingMode
             optWeightOptions);
 end
 
-% Create Problem, Linear Constrains, and Solution (Without constrain)
+%% Create Problem, Linear Constrains, and Solution (Without constrain)
 fminuncOptions = optimoptions('fminunc', "Algorithm","quasi-Newton", "MaxIterations", 1000,...
     "Display","iter",'FunctionTolerance',1e-9,...
     "MaxFunctionEvaluations", 40000, "UseParallel",true, "FiniteDifferenceType", 'central');
@@ -184,7 +199,11 @@ fminuncOptions = optimoptions('fminunc', "Algorithm","quasi-Newton", "MaxIterati
 [x,fval,exitflag,output,~,~] = fminunc(f, initialHoppingParameter, fminuncOptions);
 % [x,fval,exitflag,output] = fminsearch(f, initialHoppingParameter, fminsearchOptions);
 
-% Create Problem, Linear Constrains, and Solution (With constrain)
+%% Or least-square-question fitting
+% lsqnonlinOptions = optimoptions('lsqnonlin','Algorithm','levenberg-marquardt', 'Display', 'iter', 'UseParallel', true, "MaxIterations", 1000,...
+%     "Display", "iter", "MaxFunctionEvaluations", 40000);
+% [x,resnorm,residual,exitflag,output] = lsqnonlin(f, initialHoppingParameter,[], [], lsqnonlinOptions);
+%% Create Problem, Linear Constrains, and Solution (With constrain)
 
 % load("constrain.mat");
 % constrainNumber = 1;
@@ -212,7 +231,7 @@ fminuncOptions = optimoptions('fminunc', "Algorithm","quasi-Newton", "MaxIterati
 %     "PlotFcn","optimplotfval","UseParallel",true, "FiniteDifferenceType", 'central');
 % [x,fval,exitflag,output] = fmincon(f, initialHoppingParameter, A, b, Aeq, beq, lb, ub, nonlcon, fminconOptions);
 
-% Visualize the calulate result, uncomment if you need
+%% Visualize the calulate result, uncomment if you need
 updatedHoppingParameter = num2cell(x);
 calcHkin = zeros(1, length(kPointsMesh));
 initHkin = zeros(1, length(kPointsMesh));
@@ -245,8 +264,9 @@ switch workingMode
         plot(kPointsMesh(4, :), real(calcHkin) - fermiLevel, 'b');
         hold on;
         plot(kPointsMesh(4, :), real(targetHkin), 'r');
-        plot(kPointsMesh(4, :), real(initHkin) - fermiLevel, 'k--');
-        legend(["Calculate", "Target", "Initial"]);
+        legend(["Calculate", "Target"]);
+%         plot(kPointsMesh(4, :), real(initHkin) - fermiLevel, 'k--');
+%         legend(["Calculate", "Target", "Initial"]);
         hold off;
 %         figure();
 %         plot(kPointsMesh(4, :), diff);
@@ -260,6 +280,7 @@ for numIdx = 1: length(updatedHoppingParameter)
     fprintf(fileId, "%12.6f", updatedHoppingParameter{numIdx});
 end
 fclose(fileId);
+save('updatedHoppingParameter.mat', 'updatedHoppingParameter');
 end
 %% External Function
 function Hkin = calculateKineticHamiltonian(transMat, kpointsRecip, hoppingParameter, hoppingMatrixProcessed)
@@ -309,6 +330,8 @@ switch workingMode
         diff = mean(real(difference));
     case 4
         diff = var(real(difference));
+    case 5
+        diff = sum(difference.^2)./length(difference);
 end
 
 end
@@ -318,8 +341,10 @@ function fittingDifference = calculateTargetFunction(workingMode, transMatA, kPo
 
 hoppingParameterCell = num2cell(hoppingParameter);
 Hkin = zeros(1, length(kPointsMesh));
-for LoopIndex = 1:length(kPointsMesh)
-    Hkin(LoopIndex) = calculateKineticHamiltonian(transMatA, kPointsMesh(1:3, LoopIndex)', hoppingParameterCell, hoppingMatrix);
+kpointsPath = kPointsMesh(4, :);
+kPointsMesh = kPointsMesh(1:3, :);
+parfor LoopIndex = 1:length(kPointsMesh)
+    Hkin(LoopIndex) = calculateKineticHamiltonian(transMatA, kPointsMesh(:, LoopIndex)', hoppingParameterCell, hoppingMatrix);
 end
 switch workingMode
     case 1
@@ -333,9 +358,9 @@ switch workingMode
     case 2
         switch optWeightOptions.optWeightMode
             case 0
-                Diff = calculateDifference(calcDiffMethod, kPointsMesh(4, :)', fermiLevel, Hkin, targetHkin);
+                Diff = calculateDifference(calcDiffMethod, kpointsPath', fermiLevel, Hkin, targetHkin);
             case 1
-                Diff = calculateDifference(calcDiffMethod, kPointsMesh(4, :)', fermiLevel, Hkin, targetHkin, optWeightOptions);
+                Diff = calculateDifference(calcDiffMethod, kpointsPath', fermiLevel, Hkin, targetHkin, optWeightOptions);
         end
         fittingDifference = abs(Diff);
 end

@@ -36,7 +36,7 @@ length4 = length2;
 % hold on;
 % scatter(sortedTheta1, length1(sortedIndex1), 5, 'b');
 % scatter(sortedTheta2, length2(sortedIndex2), 5, 'r');
-% hold off;
+% hold off;w
 
 thetaMix = [theta1, theta2, theta3, theta4];
 lengthMix = [length1, length2, length3, length4];
@@ -120,18 +120,19 @@ lattice.y = lattice.y - lattice.y(centerOrder, centerOrder);
 
 %% Rotation
 % Construct layers
-d = 1.58106107700766;   % h-phase:1.59498653898723, t-phase:1.58106107700766
-D = 3.12122839340594;   % h-phase:3.67176692979057, t-phase:3.12122839340594
+d = 1.58106107700766;   %1.58106107700766;   % h-phase:1.59498653898723, t-phase:1.58106107700766
+D = 3.42122839340594;   %2.809105554065346;  % h-phase:3.67176692979057, t-phase:3.12122839340594
+                        % Origin: 3.12122839340594
 vacuumLength = 20;
 numberOfLayers = 2;
-rotationNumIdx = 16;
+rotationNumIdx = 10;
 % for rotationNumIdx = 13: 13
 rotationDegree = thetaMixUniqueCut(rotationNumIdx)/2;
 supercellLattice = lengthMixUniqueCut(rotationNumIdx);
 supercellBoundx = [0, supercellLattice, supercellLattice/2, -supercellLattice/2, 0];
 supercellBoundy = [0, 0, sqrt(3)/2 * supercellLattice, sqrt(3)/2 * supercellLattice, 0];
-% offsetSe1 = [deltaA', deltaB']*[2/3; 1/3];
-offsetSe1 = [deltaA', deltaB']*[1/3; 2/3];
+offsetSe1 = [deltaA', deltaB']*[2/3; 1/3];
+% offsetSe1 = [deltaA', deltaB']*[1/3; 2/3];
 offsetSe2 = [deltaA', deltaB']*[1/3; 2/3];
 layer{1}.Se1.x = lattice.x + offsetSe1(1);
 layer{1}.Se1.y = lattice.y + offsetSe1(2);

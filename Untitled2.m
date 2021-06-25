@@ -1,3 +1,4 @@
+% This is a collection of small scripts used in daily life.
 % clear variables;
 a1 = [3.3291   -0.0000    0.0000];
 a2 = [-1.6645    2.8831   -0.0000];
@@ -148,17 +149,17 @@ scatter(centers(:, 1), centers(:, 2));
 clear variables
 clc;
 mag = load('D:\tmp\mag.dat');
-workMode = 'afm';
+workMode = 'fm';
 atomNumber = length(mag(:, 1))/3;
 switch workMode
     case 'fm'
-        magmom_V  = mean(mag(1: atomNumber, 5))
-        magmom_Se = mean(mag(atomNumber + 1: end, 5))
-        var_V     = var(mag(1: atomNumber, 5))
+        magmom_V  = mean(mag(1: atomNumber, 5));
+        magmom_Se = mean(mag(atomNumber + 1: end, 5));
+        var_V     = var(mag(1: atomNumber, 5));
     case 'afm'
-        magmom_V  = mean(abs(mag(1: atomNumber, 5)))
-        magmom_Se = mean(abs(mag(atomNumber + 1: end, 5)))
-        var_V     = var(abs(mag(1: atomNumber, 5)))
+        magmom_V  = mean(abs(mag(1: atomNumber, 5)));
+        magmom_Se = mean(abs(mag(atomNumber + 1: end, 5)));
+        var_V     = var(abs(mag(1: atomNumber, 5)));
 end
 % output = [magmom_V, magmom_Se, var_V];
 % clipboard('copy', output);
@@ -216,6 +217,264 @@ while true
 end
 omega(numIdxMid)
 % plot(omega, dos);
+%% Validate hopping paramter
+% import("wannier90hrmodified.dat");
+clear hoppingParameter;
+checkOrder = 33;
+hoppingParameter = zeros(length(output.hopping{1, checkOrder}), 1);
+for numIdx = 1: length(output.hopping{1, checkOrder})
+    idx1 = output.hopping{1, checkOrder}(numIdx, 1);
+    idx2 = output.hopping{1, checkOrder}(numIdx, 2);
+    try 
+        hoppingParameter(numIdx, 1) = wannier90hrmodified(wannier90hrmodified(:,1) == idx1 & wannier90hrmodified(:, 2) == idx2, 6);
+    catch
+        hoppingParameter(numIdx, 1) = NaN;
+    end
+end
+
+%% Construct primitive cell
+
+%% Math
+clear variables
+a = linspace(4/sqrt(3), 8/sqrt(3)-0.0001,100);
+x_A = (a + sqrt(a.^2 - 4*(a.^2 - 16)))/4;
+x_lb = 4/sqrt(3);
+x_ub = 10;
+% for i = 1: length(a)
+%     err = Inf;
+%     while (true)
+%         if err < 1e-8
+%             dist(i) = dist_Orig;
+%             break
+%         end
+%         x_mid = (x_lb + x_ub)/2;
+%         [dist_lb, ~] = calcDist(x_A(i), a(i), x_lb);
+%         [dist_ub, ~] = calcDist(x_A(i), a(i), x_ub);
+%         [dist_mid,dist_Orig] = calcDist(x_A(i), a(i), x_mid);
+%         if dist_lb*dist_mid > 0
+%             x_lb = x_mid;
+%         else
+%             x_ub = x_mid;
+%         end
+%         err = abs(dist_lb - dist_ub);
+%         disp(err);
+%     end 
+% end
+fminuncOptions = optimoptions('fminunc', "Algorithm","quasi-Newton", "MaxIterations", 1000,...
+    "Display","iter-detailed",'FunctionTolerance',1e-9,...
+    "MaxFunctionEvaluations", 40000, "UseParallel",true, ...
+    "FiniteDifferenceType", 'central', 'StepTolerance', 1e-8, 'OptimalityTolerance', 1e-7);
+% fminsearchOptions = optimset('Display', 'iter', 'FunValCheck', 'on', 'PlotFcns', @optimplotfval);
+% [x,fval,exitflag,output] = fminsearch(f, initialHoppingParameter, fminsearchOptions);
+for i = 1: length(a)
+    x = a(i) + 1;
+    f = @(x) calcDist(x_A(i), a(i), x);
+    [x_D(i),fval,exitflag,output,~,~] = fminunc(f, x, fminuncOptions);
+    y(i) = -(x_A(i) - a(i))*(x_D(i) - x_A(i))/(sqrt(3)*x_A(i)) + sqrt(3)*x_A(i);
+    dist_Orig(i) = sqrt(x_D(i)^2 + y(i)^2);
+end
+plot(a, dist_Orig)
+%% Wave test
+clear variables
+A = 1;
+omega = 0.2;
+lambda = 20;
+t = 0: 0.1: 1000;
+x = linspace(0, 100);
+% an = animatedline;
+y = 2*A*cos(2*pi()*x/lambda)*cos(omega*t(1));
+fig = plot(x,y);
+axis([0 100 -2 2]);
+for i = 2: length(t)
+    y = 2*A*cos(2*pi()*x/lambda)*cos(omega*t(i));
+    fig.YData = y;
+    drawnow 
+end
+%% Wave demo 2
+clear variables;
+A = 1;
+waveLength = 50;
+frequency = 2;
+rho = 5000;
+F = 500;
+% lambda = sqrt(F/rho)/frequency;
+lambda = 100;
+x = linspace(0, 100, 500);
+t = 0: 0.001: 1000;
+phi_1 = pi()/2;% - 2*pi()/lambda.*x;
+y = 2*A*cos(2*pi()/lambda.*x + phi_1)*cos(2*pi()*frequency*t(1));
+fig = plot(x, y);
+axis([0 100 -2 2]);
+for i= 2: length(t)
+    y = 2*A*cos(2*pi()/lambda.*x + phi_1)*cos(2*pi()*frequency*t(i));
+    fig.YData = y;
+    drawnow;
+end
+%% Construct primitive cell
+% clear variables
+vacuumLength = 20;
+numberOfLayers = 2;
+a = 3.3171310374808005;  % a-axies of the lattice
+b = a;      % b-axies of the lattice
+gamma = 120;% angle of <a, b>
+sizeLattice = 1;  % Scale of the system (should be odd)
+
+% Initialize of the variables
+centerOrder = (sizeLattice + 1) ./ 2;
+lattice.x = zeros(sizeLattice);
+lattice.y = zeros(sizeLattice);
+% Difference in x and y in the primitive cell
+deltaA = [a, 0];
+deltaB = [b*cosd(gamma), b*sind(gamma)];
+% Set the zero of the axies
+lattice.x(sizeLattice, 1) = 0;
+lattice.y(sizeLattice, 1) = 0;
+% Initialize the position of the center
+lattice.x(centerOrder, centerOrder) = ((centerOrder - 1)*deltaA(1) + (sizeLattice - centerOrder)*deltaB(1));
+lattice.y(centerOrder, centerOrder) = ((centerOrder - 1)*deltaA(2) + (sizeLattice - centerOrder)*deltaB(2));
+% Calculate the distance from the center
+for row = sizeLattice: -1: 1
+    for column = 1: sizeLattice
+        lattice.x(row, column) = ((column - 1)*deltaA(1) + (sizeLattice - row)*deltaB(1));
+        lattice.y(row, column) = ((column - 1)*deltaA(2) + (sizeLattice - row)*deltaB(2));
+        lattice.hoppingA(row, column) = column - centerOrder;
+        lattice.hoppingB(row, column) = centerOrder - row;
+    end
+end
+% Move the center to the axis zero
+lattice.x = lattice.x - lattice.x(centerOrder, centerOrder);
+lattice.y = lattice.y - lattice.y(centerOrder, centerOrder);
+% Construct layers
+d = 1.58106107700766;   %1.58106107700766;   % h-phase:1.59498653898723, t-phase:1.58106107700766
+D = 3.52122839340594;   %2.809105554065346;  % h-phase:3.67176692979057, t-phase:3.12122839340594
+                        % Origin: 3.12122839340594
+
+if isfield(distance, 'mean_d')
+    d = distance.mean_d;
+    if isfield(distance, 'D_X2_X3')
+        D = distance.D_X2_X3;
+    end
+end
+                        
+offsetSe1 = [deltaA', deltaB']*[2/3; 1/3];
+% offsetSe1 = [deltaA', deltaB']*[1/3; 2/3];
+offsetSe2 = [deltaA', deltaB']*[1/3; 2/3];
+layer{1}.Se1.x = lattice.x + offsetSe1(1);
+layer{1}.Se1.y = lattice.y + offsetSe1(2);
+layer{1}.Se1.z = zeros(size(lattice.x));
+layer{1}.V.x = lattice.x;
+layer{1}.V.y = lattice.y;
+layer{1}.V.z = zeros(size(lattice.x)) + d;
+layer{1}.Se2.x = lattice.x + offsetSe2(1);
+layer{1}.Se2.y = lattice.y + offsetSe2(2);
+layer{1}.Se2.z = zeros(size(lattice.x)) + 2*d;
+
+layer{2} = layer{1};
+layer{2}.Se1.z = layer{1}.Se1.z + D + 2*d;
+layer{2}.Se2.z = layer{1}.Se2.z + D + 2*d;
+layer{2}.V.z = layer{1}.V.z + D + 2*d;
+
+% Calculate POSCAR
+switch numberOfLayers
+    case 2
+        primitiveCellC = vacuumLength + 4*d + D;
+    case 1
+        primitiveCellC = vacuumLength + 2*d;
+end
+VatomNumber = 0;
+SeatomNumber = 0;
+primitiveCellLattice = a;
+primitiveCell.V.x = layer{1}.V.x;
+primitiveCell.V.y = layer{1}.V.y;
+primitiveCell.V.z = layer{1}.V.z;
+primitiveCell.Se.x = cat(1, layer{1}.Se1.x, layer{1}.Se2.x);
+primitiveCell.Se.y = cat(1, layer{1}.Se1.y, layer{1}.Se2.y);
+primitiveCell.Se.z = cat(1, layer{1}.Se1.z, layer{1}.Se2.z);
+for i = 1: numberOfLayers
+    VatomNumber = VatomNumber + length(layer{i}.V.x);
+    SeatomNumber = SeatomNumber + length(layer{i}.Se1.x) + length(layer{i}.Se2.x);
+    if i >= 2
+        primitiveCell.V.x = cat(1, primitiveCell.V.x, layer{i}.V.x);
+        primitiveCell.V.y = cat(1, primitiveCell.V.y, layer{i}.V.y);
+        primitiveCell.V.z = cat(1, primitiveCell.V.z, layer{i}.V.z);
+        primitiveCell.Se.x = cat(1, primitiveCell.Se.x, layer{i}.Se1.x, layer{i}.Se2.x);
+        primitiveCell.Se.y = cat(1, primitiveCell.Se.y, layer{i}.Se1.y, layer{i}.Se2.y);
+        primitiveCell.Se.z = cat(1, primitiveCell.Se.z, layer{i}.Se1.z, layer{i}.Se2.z);
+    end
+end
+% Write POSCAR
+fileId = fopen("POSCAR", 'w');
+fprintf(fileId, "Primitive Cell, D = %5.4f\n", D);
+fprintf(fileId, "   1.00000000000000 \n");
+fprintf(fileId, "%24.15f %24.15f %24.15f\n", [primitiveCellLattice, 0, 0]);
+fprintf(fileId, "%24.15f %24.15f %24.15f\n", [-primitiveCellLattice/2, sqrt(3)/2*primitiveCellLattice, 0]);
+fprintf(fileId, "%24.15f %24.15f %24.15f\n", [0, 0, primitiveCellC]);
+fprintf(fileId, "   V    Se\n");
+fprintf(fileId, "%6d %6d\n", [VatomNumber, SeatomNumber]);
+fprintf(fileId, "Cartesian\n");
+for numIdx = 1: VatomNumber
+    fprintf(fileId, "% 18.16f % 21.16f % 21.16f\n", [primitiveCell.V.x(numIdx), primitiveCell.V.y(numIdx), primitiveCell.V.z(numIdx)]);
+end
+
+for numIdx = 1: SeatomNumber
+    fprintf(fileId, "% 18.16f % 21.16f % 21.16f\n", [primitiveCell.Se.x(numIdx), primitiveCell.Se.y(numIdx), primitiveCell.Se.z(numIdx)]);
+end
+fclose(fileId);
+
+%% Read POSCAR, obtain structure information
+clear variables
+filename = "C:\Users\SCES\Desktop\matlabCodes\POSCAR";
+opts = delimitedTextImportOptions("NumVariables", 4);
+opts.DataLines = [1, Inf];
+opts.Delimiter = ["\t", " "];
+opts.VariableNames = ["col1", "col2", "col3", "col4"];
+opts.VariableTypes = ["string", "string", "string", "string"];
+opts = setvaropts(opts, [1, 2, 3, 4], "WhitespaceRule", "preserve");
+opts = setvaropts(opts, [1, 2, 3, 4], "EmptyFieldRule", "auto");
+opts.ExtraColumnsRule = "ignore";
+opts.EmptyLineRule = "read";
+opts.ConsecutiveDelimitersRule = "join";
+POSCARtemp = readtable(filename, opts);
+POSCARtemp = table2array(POSCARtemp);
+POSCARtemp(ismissing(POSCARtemp)) = "";
+for i = 1:length(POSCARtemp)
+    tmp.numIdx = find( strlength(POSCARtemp(i, :)) );
+    POSCAR.stringMat(i, 1: length(tmp.numIdx)) = POSCARtemp(i, tmp.numIdx);
+end
+POSCAR.stringMat(ismissing(POSCAR.stringMat)) = "";
+POSCAR.element.name = POSCAR.stringMat(6, :);
+POSCAR.element.name( POSCAR.element.name=='' )= [];
+POSCAR.element.num = str2double (POSCAR.stringMat(7, :) );
+POSCAR.element.num(isnan(POSCAR.element.num)) = [];
+POSCAR.element.totalAtomNumber = sum(POSCAR.element.num);
+tmp.totAtomNumber = sum(POSCAR.element.num);
+clear opts i POSCARtemp
+
+SCAL = str2double(POSCAR.stringMat(2,1));
+a1 = str2double(POSCAR.stringMat(3, 1: 3))*SCAL;
+a2 = str2double(POSCAR.stringMat(4, 1: 3))*SCAL;
+a3 = str2double(POSCAR.stringMat(5, 1: 3))*SCAL;
+POSCAR.atomPos = str2double(POSCAR.stringMat(9:(8 + POSCAR.element.totalAtomNumber), 1: 3));
+% Remove the translation symmetry
+POSCAR.atomPos(POSCAR.atomPos(:, 3) > 0.9, 3) = -(1 - POSCAR.atomPos(POSCAR.atomPos(:, 3) > 0.9, 3));
+switch POSCAR.element.totalAtomNumber
+    case 3
+        numberOfLayers = 1;
+        distance.latticeConst = a1(1);
+        distance.d_V_X1 = dot((POSCAR.atomPos(1, :) - POSCAR.atomPos(2, :)), a3);
+        distance.d_V_X2 = dot((POSCAR.atomPos(3, :) - POSCAR.atomPos(1, :)), a3);
+        distance.mean_d = sum([distance.d_V_X1, distance.d_V_X2])/2;
+    case 6
+        numberOfLayers = 2;
+        distance.latticeConst = a1(1);
+        distance.d_V1_X1 = dot((POSCAR.atomPos(1, :) - POSCAR.atomPos(3, :)), a3);
+        distance.d_V1_X2 = dot((POSCAR.atomPos(4, :) - POSCAR.atomPos(1, :)), a3);
+        distance.D_X2_X3 = dot((POSCAR.atomPos(5, :) - POSCAR.atomPos(4, :)), a3);
+        distance.d_V2_X3 = dot((POSCAR.atomPos(2, :) - POSCAR.atomPos(5, :)), a3);
+        distance.d_V2_X4 = dot((POSCAR.atomPos(6, :) - POSCAR.atomPos(2, :)), a3);
+        distance.mean_d = sum([distance.d_V1_X1, distance.d_V1_X2, distance.d_V2_X3, distance.d_V2_X4])/4;
+end
+disp(distance);
 %% Temp Function
 function weight = calculateWeightProportialToEnergy(maxWeight, lifeWidth, targetHkin, FermiLevel)
 % Gauss distribution, peaks at Fermilevel with input variable maxWeight,
@@ -232,4 +491,10 @@ for numIdx = 1: length(targetHkin)
         weight(numIdx) = 1;
     end
 end
+end
+
+function dist = calcDist(x_A, a, x)
+y = -(x_A - a)*(x - x_A)/(sqrt(3)*x_A) + sqrt(3)*x_A;
+dist = abs(sqrt((x-x_A)^2 + (y-sqrt(3)*x_A)^2) - 2);
+% dist_Orig = sqrt(x^2 + y^2);
 end

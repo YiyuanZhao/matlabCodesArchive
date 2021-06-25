@@ -1,8 +1,9 @@
 clear variables
-workingMode = 2;                % 1: K-mesh at xy plane;  2: K-path at high-symmetry path
+workingMode = 1;                % 1: K-mesh at xy plane;  2: K-path at high-symmetry path
 fermiLevel = -2.4474445;        % Should be defined in K-path Working Mode
-fittingNeighbourOrder = 20;     % Fitting Order
+fittingNeighbourOrder = 30;     % Fitting Order
 fittingTypeDatabase = {'WannierFit', 'DFT'};     % options: 'DFT' / 'WannierFit'
+fittingType = fittingTypeDatabase{2};
 calcDiffMethod = 5;
 repeatTimes = 1;
 continueOptFlag = 0;
@@ -57,7 +58,6 @@ calcDiffMethodMax = 2;
 % end
 for repNumIdx = 1: repeatTimes
 initialHoppingParameter = generateInitialHoppingParameter(fittingNeighbourOrder, -0.1, 0.1);
-fittingType = fittingTypeDatabase{2};
 %% Function construction
 % function [x, fval, exitflag, output] = HubbardFittingLiveFunction(workingMode, fermiLevel,...
 %     fittingNeighbourOrder, fittingType, calcDiffMethod, initialHoppingParameter)
@@ -192,17 +192,30 @@ switch workingMode
 end
 
 %% Create Problem, Linear Constrains, and Solution (Without constrain)
-fminuncOptions = optimoptions('fminunc', "Algorithm","quasi-Newton", "MaxIterations", 1000,...
-    "Display","iter",'FunctionTolerance',1e-9,...
-    "MaxFunctionEvaluations", 40000, "UseParallel",true, "FiniteDifferenceType", 'central');
-% fminsearchOptions = optimset('Display', 'iter', 'FunValCheck', 'on', 'PlotFcns', @optimplotfval);
-[x,fval,exitflag,output,~,~] = fminunc(f, initialHoppingParameter, fminuncOptions);
-% [x,fval,exitflag,output] = fminsearch(f, initialHoppingParameter, fminsearchOptions);
+% fminuncOptions = optimoptions('fminunc', "Algorithm","quasi-Newton", "MaxIterations", 1000,...
+%     "Display","iter-detailed",'FunctionTolerance',1e-9,...
+%     "MaxFunctionEvaluations", 40000, "UseParallel",true, ...
+%     "FiniteDifferenceType", 'central', 'StepTolerance', 1e-8, 'OptimalityTolerance', 1e-7);
+% % fminsearchOptions = optimset('Display', 'iter', 'FunValCheck', 'on', 'PlotFcns', @optimplotfval);
+% [x,fval,exitflag,output,~,~] = fminunc(f, initialHoppingParameter, fminuncOptions);
+% % [x,fval,exitflag,output] = fminsearch(f, initialHoppingParameter, fminsearchOptions);
 
 %% Or least-square-question fitting
 % lsqnonlinOptions = optimoptions('lsqnonlin','Algorithm','levenberg-marquardt', 'Display', 'iter', 'UseParallel', true, "MaxIterations", 1000,...
 %     "Display", "iter", "MaxFunctionEvaluations", 40000);
 % [x,resnorm,residual,exitflag,output] = lsqnonlin(f, initialHoppingParameter,[], [], lsqnonlinOptions);
+%% Or PSO algorithm
+particleswarmOptions = optimoptions('particleswarm', 'MaxIterations', 1000, 'UseParallel', true, ...
+    'Display', 'iter', 'OutputFcn', @pswplotranges, 'SwarmSize', 1000);
+lb = [-5, -ones(1, fittingNeighbourOrder - 1)];
+ub = [ 5,  ones(1, fittingNeighbourOrder - 1)];
+[x,~,~,~] = particleswarm(f, fittingNeighbourOrder, lb, ub, particleswarmOptions);
+updatedHoppingParameter = x;
+fminuncOptions = optimoptions('fminunc', "Algorithm","quasi-Newton", "MaxIterations", 1000,...
+    "Display","iter-detailed",'FunctionTolerance',1e-9,...
+    "MaxFunctionEvaluations", 40000, "UseParallel",true, ...
+    "FiniteDifferenceType", 'central', 'StepTolerance', 1e-8, 'OptimalityTolerance', 1e-7);
+[x,fval,exitflag,output,~,~] = fminunc(f, updatedHoppingParameter, fminuncOptions);
 %% Create Problem, Linear Constrains, and Solution (With constrain)
 
 % load("constrain.mat");
@@ -341,13 +354,13 @@ function fittingDifference = calculateTargetFunction(workingMode, transMatA, kPo
 
 hoppingParameterCell = num2cell(hoppingParameter);
 Hkin = zeros(1, length(kPointsMesh));
-kpointsPath = kPointsMesh(4, :);
-kPointsMesh = kPointsMesh(1:3, :);
-parfor LoopIndex = 1:length(kPointsMesh)
-    Hkin(LoopIndex) = calculateKineticHamiltonian(transMatA, kPointsMesh(:, LoopIndex)', hoppingParameterCell, hoppingMatrix);
-end
+
 switch workingMode
     case 1
+        kPointsMesh = kPointsMesh(1:3, :);
+        parfor LoopIndex = 1:length(kPointsMesh)
+            Hkin(LoopIndex) = calculateKineticHamiltonian(transMatA, kPointsMesh(:, LoopIndex)', hoppingParameterCell, hoppingMatrix);
+        end
         switch optWeightOptions.optWeightMode
             case 0
                 Diff = calculateDifference(calcDiffMethod, kPointsMesh(1, :)', fermiLevel, Hkin, targetHkin);
@@ -356,6 +369,11 @@ switch workingMode
         end
         fittingDifference = abs(Diff);
     case 2
+        kpointsPath = kPointsMesh(4, :);
+        kPointsMesh = kPointsMesh(1:3, :);
+        parfor LoopIndex = 1:length(kPointsMesh)
+            Hkin(LoopIndex) = calculateKineticHamiltonian(transMatA, kPointsMesh(:, LoopIndex)', hoppingParameterCell, hoppingMatrix);
+        end
         switch optWeightOptions.optWeightMode
             case 0
                 Diff = calculateDifference(calcDiffMethod, kpointsPath', fermiLevel, Hkin, targetHkin);
@@ -388,4 +406,75 @@ function weight = calculateWeightProportialToEnergy(maxWeight, unityWidth, targe
             weight(numIdx) = 1;
         end
     end
-    end
+end
+
+function stop = pswplotranges(optimValues,state)
+stop = false; % This function does not stop the solver
+switch state
+    case 'init'
+        nplot = size(optimValues.swarm,2); % Number of dimensions
+        if nplot <= 6
+            for i = 1:nplot % Set up axes for plot
+                subplot(nplot,1,i);
+                tag = sprintf('psoplotrange_var_%g',i); % Set a tag for the subplot
+                semilogy(optimValues.iteration,0,'-k','Tag',tag); % Log-scaled plot
+                ylabel(num2str(i))
+                xlabel('Iteration','interp','none'); % Iteration number at the bottom
+                subplot(nplot,1,1) % Title at the top
+            end
+        else
+            rowNum = ceil(sqrt(nplot));
+            colNum = ceil(nplot/rowNum);
+            for i = 1:nplot % Set up axes for plot
+                subplot(rowNum, colNum, i);
+                tag = sprintf('psoplotrange_var_%g',i); % Set a tag for the subplot
+                semilogy(optimValues.iteration,0,'-k','Tag',tag); % Log-scaled plot
+                ylabel(num2str(i))
+                xlabel('Iteration','interp','none'); % Iteration number at the bottom
+                subplot(rowNum,colNum,1) % Title at the top
+            end
+        end
+        
+        title('Log range of particles by component')
+        setappdata(gcf,'t0',tic); % Set up a timer to plot only when needed
+    case 'iter'
+        nplot = size(optimValues.swarm,2); % Number of dimensions
+        if nplot <= 6
+            for i = 1:nplot
+                subplot(nplot,1,i);
+                % Calculate the range of the particles at dimension i
+                irange = max(optimValues.swarm(:,i)) - min(optimValues.swarm(:,i));
+                tag = sprintf('psoplotrange_var_%g',i);
+                plotHandle = findobj(get(gca,'Children'),'Tag',tag); % Get the subplot
+                xdata = plotHandle.XData; % Get the X data from the plot
+                newX = [xdata optimValues.iteration]; % Add the new iteration
+                plotHandle.XData = newX; % Put the X data into the plot
+                ydata = plotHandle.YData; % Get the Y data from the plot
+                newY = [ydata irange]; % Add the new value
+                plotHandle.YData = newY; % Put the Y data into the plot
+            end
+        else
+            for i = 1:nplot
+                rowNum = ceil(sqrt(nplot));
+                colNum = ceil(nplot/rowNum);
+                subplot(rowNum, colNum, i);
+                % Calculate the range of the particles at dimension i
+                irange = max(optimValues.swarm(:,i)) - min(optimValues.swarm(:,i));
+                tag = sprintf('psoplotrange_var_%g',i);
+                plotHandle = findobj(get(gca,'Children'),'Tag',tag); % Get the subplot
+                xdata = plotHandle.XData; % Get the X data from the plot
+                newX = [xdata optimValues.iteration]; % Add the new iteration
+                plotHandle.XData = newX; % Put the X data into the plot
+                ydata = plotHandle.YData; % Get the Y data from the plot
+                newY = [ydata irange]; % Add the new value
+                plotHandle.YData = newY; % Put the Y data into the plot
+            end
+        end
+        if toc(getappdata(gcf,'t0')) > 1/30 % If 1/30 s has passed
+            drawnow % Show the plot
+            setappdata(gcf,'t0',tic); % Reset the timer
+        end
+    case 'done'
+        % No cleanup necessary
+end
+end

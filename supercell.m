@@ -1,8 +1,19 @@
+% Modification that should be done using this script:
+% Lattice constant:         a
+% Layer distance:           d,  D
+% Number of layers:         numberOfLayers
+% Rotation number index:    rotationNumIdx
 %% Determine the supercell length
 clear variables;
 nMax = 40;
 mMax = 40;
-a = 3.3171310374808005;
+% Lattice Constant Database:
+% VS2:
+a = 3.188283699968635;
+% VSe2:
+% a = 3.3171310374808005;
+% VTe2:
+% a = 3.579672793241685;
 cutMaxA = 10* a;
 
 theta1 = zeros(nMax, mMax);
@@ -45,14 +56,15 @@ lengthMix = [length1, length2, length3, length4];
 while ~prod(sortedmMix <= 20)
     sortedmMix(sortedmMix > 20) = sortedmMix(sortedmMix > 20) - 20;
 end
-sortedMixType = nan(size(thetaMix));
+% sortedMixType = nan(size(thetaMix));
 sortedMixType = 1*(sortedIndexMix(:) <= (numel(thetaMix)/4)) + 2*(sortedIndexMix(:) > (numel(thetaMix)/4) & sortedIndexMix(:) <= (numel(thetaMix)/2)) ...
     + 3* (sortedIndexMix(:) > (numel(thetaMix)/2) & sortedIndexMix(:) <= (numel(thetaMix)*3/4)) + 4*(sortedIndexMix(:) > (numel(thetaMix)*3/4));
 
 % figure;
 % scatter(sortedThetaMix, lengthMix(sortedIndexMix), 5);
 
-[thetaMixUnique, sortedIndexMixUnique] = uniquetol(thetaMix);
+% [thetaMixUnique, sortedIndexMixUnique] = uniquetol(thetaMix);
+[thetaMixUnique, ~] = uniquetol(thetaMix);
 lengthMixUnique = nan(size(thetaMixUnique));
 sortedmMixUnique = nan(size(thetaMixUnique));
 sortednMixUnique = nan(size(thetaMixUnique));
@@ -66,8 +78,8 @@ for numIdx = 1: length(thetaMixUnique)
     sortedMixTypeUnique(numIdx) = sortedMixType(tmpIndex);
 end
 
-% figure;
-% scatter(thetaMixUnique, lengthMixUnique, 5);
+figure;
+scatter(thetaMixUnique, lengthMixUnique, 5);
 % plot(thetaMixUnique, lengthMixUnique);
 
 cutIndex = lengthMixUnique < cutMaxA;
@@ -120,9 +132,16 @@ lattice.y = lattice.y - lattice.y(centerOrder, centerOrder);
 
 %% Rotation
 % Construct layers
-d = 1.58106107700766;   %1.58106107700766;   % h-phase:1.59498653898723, t-phase:1.58106107700766
-D = 3.42122839340594;   %2.809105554065346;  % h-phase:3.67176692979057, t-phase:3.12122839340594
-                        % Origin: 3.12122839340594
+% Struct Database:
+% VS2:
+% d = 1.467435675425866;   % h-phase:N/A, t-phase:1.467435675425866
+% D = 3.002888428993187;   % h-phase:N/A, t-phase:3.002888428993187
+% VSe2:
+d = 1.58106107700766;   % h-phase:1.59498653898723, t-phase:1.58106107700766
+D = 3.42122839340594;   % h-phase:3.67176692979057, t-phase:3.12122839340594
+% VTe2:
+% d = 1.725763872572049;   % h-phase:N/A, t-phase:1.725763872572049
+% D = 1.92122839340594;   % h-phase:N/A, t-phase:3.305618713378540
 vacuumLength = 20;
 numberOfLayers = 2;
 rotationNumIdx = 10;
@@ -242,12 +261,12 @@ for i = 1: numberOfLayers
 end
 % Write POSCAR
 fileId = fopen("POSCAR", 'w');
-fprintf(fileId, "Degree: %.5f\n", thetaMixUniqueCut(rotationNumIdx));
+fprintf(fileId, "Degree: %.5f, D = %5.4f\n", thetaMixUniqueCut(rotationNumIdx), D);
 fprintf(fileId, "   1.00000000000000 \n");
 fprintf(fileId, "%24.15f %24.15f %24.15f\n", [supercellLattice, 0, 0]);
 fprintf(fileId, "%24.15f %24.15f %24.15f\n", [-supercellLattice/2, sqrt(3)/2*supercellLattice, 0]);
 fprintf(fileId, "%24.15f %24.15f %24.15f\n", [0, 0, supercellC]);
-fprintf(fileId, "   V    Se\n");
+fprintf(fileId, "   V    S\n");
 fprintf(fileId, "%6d %6d\n", [VatomNumber, SeatomNumber]);
 fprintf(fileId, "Cartesian\n");
 for numIdx = 1: VatomNumber

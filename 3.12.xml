@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<modeling>
+    <summary name="atomchg">
+        <totalEnergy>-290.286280</totalEnergy>
+	<totalmag></totalmag>
+        <totAtomNum>42</totAtomNum>
+        <eentro>0.00000000</eentro>
+        <externalPressure>-291.21</externalPressure>
+        <pullayStress>0.00</pullayStress>
+        <elapsedTime>11498.211</elapsedTime>
+        <edisp>-9.74900</edisp>
+        <staticConfiguration>C_3</staticConfiguration>
+        <dynamicConfiguration>C_3</dynamicConfiguration>
+        <magneticConfiguration></magneticConfiguration>
+        <magmont></magmont>
+    </summary>
+    <summary name="band">
+        <totalEnergy>-246.877520</totalEnergy>
+	<totalmag></totalmag>
+        <totAtomNum>42</totAtomNum>
+        <eentro>0.00885730</eentro>
+        <externalPressure>5.88</externalPressure>
+        <pullayStress>0.00</pullayStress>
+        <elapsedTime>40623.708</elapsedTime>
+        <edisp>-9.74900</edisp>
+        <staticConfiguration>C_3</staticConfiguration>
+        <dynamicConfiguration>C_3</dynamicConfiguration>
+        <magneticConfiguration></magneticConfiguration>
+        <magmont></magmont>
+    </summary>
+    <summary name="dos">
+        <totalEnergy>-247.055710</totalEnergy>
+	<totalmag></totalmag>
+        <totAtomNum>42</totAtomNum>
+        <eentro>0.00000000</eentro>
+        <externalPressure>2.28</externalPressure>
+        <pullayStress>0.00</pullayStress>
+        <elapsedTime>12310.274</elapsedTime>
+        <edisp>-9.74900</edisp>
+        <staticConfiguration>C_3</staticConfiguration>
+        <dynamicConfiguration>C_3</dynamicConfiguration>
+        <magneticConfiguration></magneticConfiguration>
+        <magmont></magmont>
+    </summary>
+    <summary name="sc">
+        <totalEnergy>-247.053650</totalEnergy>
+	<totalmag></totalmag>
+        <totAtomNum>42</totAtomNum>
+        <eentro>0.00000000</eentro>
+        <externalPressure>2.26</externalPressure>
+        <pullayStress>0.00</pullayStress>
+        <elapsedTime>10192.893</elapsedTime>
+        <edisp>-9.74900</edisp>
+        <staticConfiguration>C_3</staticConfiguration>
+        <dynamicConfiguration>C_3</dynamicConfiguration>
+        <magneticConfiguration></magneticConfiguration>
+        <magmont></magmont>
+    </summary>
+</modeling>

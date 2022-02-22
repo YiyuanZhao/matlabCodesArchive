@@ -1,7 +1,7 @@
 clear variables
-workingMode = 1;                % 1: K-mesh at xy plane;  2: K-path at high-symmetry path
+workingMode = 2;                % 1: K-mesh at xy plane;  2: K-path at high-symmetry path
 fermiLevel = -2.4474445;        % Should be defined in K-path Working Mode
-fittingNeighbourOrder = 30;     % Fitting Order
+fittingNeighbourOrder = 20;     % Fitting Order
 fittingTypeDatabase = {'WannierFit', 'DFT'};     % options: 'DFT' / 'WannierFit'
 fittingType = fittingTypeDatabase{2};
 calcDiffMethod = 5;
@@ -287,7 +287,7 @@ end
 FinClock = clock;
 timeDuration = etime(FinClock, initClock);
 disp(timeDuration);
-% Export the updated hopping parameter
+%% Export the updated hopping parameter
 fileId = fopen(join(['.\summary\', join(string(FinClock(1: 5)),""), '.dat'], ""), "w");
 for numIdx = 1: length(updatedHoppingParameter)
     fprintf(fileId, "%12.6f", updatedHoppingParameter{numIdx});
